@@ -13,17 +13,15 @@ export function LandingPage() {
       )
     : companies;
 
-  const handleCompanyClick = (id: string, hasAudit: boolean) => {
-    if (hasAudit) {
-      navigate(`/audit/${id}`);
-    }
+  const handleCompanyClick = (id: string) => {
+    navigate(`/audit/${id}/loading`);
   };
 
   const handleGenerate = () => {
     const match = companies.find((c) =>
       c.name.toLowerCase().includes(query.toLowerCase())
     );
-    if (match?.hasAudit) {
+    if (match) {
       navigate(`/audit/${match.id}/loading`);
     }
   };
@@ -78,12 +76,8 @@ export function LandingPage() {
             {filtered.map((company) => (
               <button
                 key={company.id}
-                onClick={() => handleCompanyClick(company.id, company.hasAudit)}
-                className={`group relative flex items-center gap-3 rounded-lg border p-4 text-left transition-all cursor-pointer ${
-                  company.hasAudit
-                    ? "border-border bg-card hover:bg-card-hover hover:border-accent/50"
-                    : "border-border/50 bg-card/50 opacity-60"
-                }`}
+                onClick={() => handleCompanyClick(company.id)}
+                className="group relative flex items-center gap-3 rounded-lg border border-border bg-card hover:bg-card-hover hover:border-accent/50 p-4 text-left transition-all cursor-pointer"
               >
                 <div className="flex-shrink-0 w-8 h-8 rounded-full bg-background flex items-center justify-center text-muted">
                   {company.sector === "bank" ? (
@@ -100,16 +94,10 @@ export function LandingPage() {
                     {company.sector === "bank" ? "Banking" : "Insurance"}
                   </span>
                 </div>
-                {company.hasAudit ? (
-                  <ArrowRight
-                    size={14}
-                    className="text-muted group-hover:text-accent transition-colors flex-shrink-0"
-                  />
-                ) : (
-                  <span className="text-[10px] text-muted uppercase tracking-wider flex-shrink-0">
-                    Soon
-                  </span>
-                )}
+                <ArrowRight
+                  size={14}
+                  className="text-muted group-hover:text-accent transition-colors flex-shrink-0"
+                />
               </button>
             ))}
           </div>

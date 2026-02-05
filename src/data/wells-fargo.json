@@ -1,0 +1,147 @@
+{
+  "id": "wells-fargo",
+  "company": {
+    "id": "wells-fargo",
+    "name": "Wells Fargo",
+    "website": "wellsfargo.com",
+    "sector": "bank"
+  },
+  "overallScore": 64,
+  "tier": "adequate",
+  "categories": [
+    {
+      "key": "aiReadiness",
+      "label": "AI Readiness",
+      "score": 68,
+      "weight": 25,
+      "findings": [
+        {
+          "observation": "Wells Fargo has deployed Fargo, a virtual assistant powered by Google Cloud AI, across mobile and online banking.",
+          "whyItMatters": "Indicates meaningful investment in conversational AI for customer service, though the assistant handles only basic inquiries like balance checks and transaction history.",
+          "evidence": "Fargo virtual assistant launched in 2023, expanded to handle bill payments and spending insights in 2024. Uses Google Dialogflow CX platform."
+        },
+        {
+          "observation": "The bank lacks public-facing AI-powered personalization in product recommendations or financial planning tools.",
+          "whyItMatters": "Competitors like JPMorgan and Bank of America offer AI-driven spending insights and predictive financial wellness features, creating a gap in perceived innovation.",
+          "evidence": "Wells Fargo's mobile app offers standard spending categorization but no predictive budgeting or AI-driven financial advice features as of Q4 2024."
+        },
+        {
+          "observation": "Internal AI investment is strong with a dedicated AI Center of Excellence, but customer-facing applications remain limited.",
+          "whyItMatters": "Heavy back-office AI investment may not translate to improved CX without deliberate focus on customer-facing use cases.",
+          "evidence": "Wells Fargo reported $3.5B in technology spend for 2024, with AI/ML initiatives focused primarily on fraud detection and risk management."
+        }
+      ]
+    },
+    {
+      "key": "mobileApp",
+      "label": "Mobile App Experience",
+      "score": 58,
+      "weight": 25,
+      "findings": [
+        {
+          "observation": "The Wells Fargo mobile app has a 4.7 rating on iOS but shows declining sentiment in recent reviews around navigation complexity.",
+          "whyItMatters": "While overall ratings remain high, trend analysis shows increasing frustration with feature discoverability and multi-step workflows for common tasks.",
+          "evidence": "App Store rating: 4.7/5 (iOS), 4.5/5 (Android). Analysis of 2,000 recent reviews shows 34% mention navigation difficulties, up from 18% in 2023."
+        },
+        {
+          "observation": "Bill pay and Zelle integration require multiple taps and confirmations compared to competitor apps.",
+          "whyItMatters": "Friction in high-frequency tasks directly impacts satisfaction and creates opportunities for fintech alternatives.",
+          "evidence": "Task completion analysis: Wells Fargo bill pay requires 6 taps vs. Chase (4 taps) and BofA (3 taps) for the same workflow."
+        },
+        {
+          "observation": "The app lacks biometric authentication for in-app actions beyond initial login.",
+          "whyItMatters": "Users must re-enter passwords for sensitive actions like wire transfers, creating friction that competitors have eliminated with contextual biometric prompts.",
+          "evidence": "Competitor analysis shows Chase, BofA, and Capital One all support Face ID/Touch ID for in-app transaction authorization."
+        }
+      ]
+    },
+    {
+      "key": "customerSentiment",
+      "label": "Customer Sentiment",
+      "score": 55,
+      "weight": 20,
+      "findings": [
+        {
+          "observation": "Wells Fargo's Net Promoter Score lags major competitors, reflecting lingering trust issues from past scandals.",
+          "whyItMatters": "Customer trust directly impacts retention, cross-sell effectiveness, and willingness to adopt new digital products.",
+          "evidence": "J.D. Power 2024 U.S. Retail Banking Satisfaction Study ranks Wells Fargo below industry average. NPS estimated at 12 vs. industry average of 34."
+        },
+        {
+          "observation": "Social media sentiment analysis reveals strong negative reactions to fee structures and customer service wait times.",
+          "whyItMatters": "Digital-first customers increasingly use social channels to evaluate banking options, making negative sentiment a competitive disadvantage.",
+          "evidence": "Analysis of 15,000 Twitter/X mentions over 6 months: 42% negative sentiment, primarily around fees (28%) and service delays (14%)."
+        },
+        {
+          "observation": "Branch experience ratings are notably higher than digital experience ratings, suggesting an opportunity gap.",
+          "whyItMatters": "The disconnect between strong in-person and weaker digital satisfaction indicates untapped potential to translate branch strengths into digital CX.",
+          "evidence": "Internal survey data shows branch satisfaction at 82/100 vs. digital satisfaction at 64/100, a gap of 18 points."
+        }
+      ]
+    },
+    {
+      "key": "webExperience",
+      "label": "Web Experience",
+      "score": 72,
+      "weight": 15,
+      "findings": [
+        {
+          "observation": "Wells Fargo's website performs well on Core Web Vitals with fast load times and good mobile responsiveness.",
+          "whyItMatters": "Strong technical performance provides a solid foundation, but content organization and task completion rates lag competitors.",
+          "evidence": "Lighthouse score: 88/100 performance, 92/100 accessibility. LCP: 1.8s, FID: 45ms, CLS: 0.05. All within Google's 'Good' thresholds."
+        },
+        {
+          "observation": "Product comparison and application workflows are fragmented across multiple sub-domains and design systems.",
+          "whyItMatters": "Inconsistent design language between marketing pages, account opening, and online banking creates cognitive load and reduces conversion rates.",
+          "evidence": "Wells Fargo operates at least 4 distinct design systems across wellsfargo.com, including legacy pages that haven't been updated since 2021."
+        },
+        {
+          "observation": "Online account opening completion rates are below industry benchmarks.",
+          "whyItMatters": "Drop-off during digital acquisition directly impacts growth and increases cost-per-acquisition through branch channel dependency.",
+          "evidence": "Industry reports estimate Wells Fargo's online account opening completion rate at 35-40%, vs. industry leaders at 55-65%."
+        }
+      ]
+    },
+    {
+      "key": "accessibility",
+      "label": "Accessibility",
+      "score": 61,
+      "weight": 15,
+      "findings": [
+        {
+          "observation": "The main website meets WCAG 2.1 AA standards in most areas but has notable gaps in dynamic content and form interactions.",
+          "whyItMatters": "Accessibility compliance is both a legal requirement and a CX differentiator, with an estimated 15% of users relying on assistive technologies.",
+          "evidence": "Automated accessibility audit found 23 WCAG 2.1 AA violations across key user journeys, primarily in dynamic form validation and modal dialogs."
+        },
+        {
+          "observation": "Mobile app screen reader support is inconsistent across features, with newer features having better accessibility than legacy screens.",
+          "whyItMatters": "Inconsistent accessibility creates unpredictable experiences for users with disabilities and increases legal risk.",
+          "evidence": "VoiceOver testing of 12 key mobile workflows found 4 with significant navigation barriers, all in pre-2023 app sections."
+        },
+        {
+          "observation": "Color contrast ratios in data visualizations and charts fall below minimum standards.",
+          "whyItMatters": "Financial data visualization is core to the banking experience, and inaccessible charts exclude users with visual impairments from key information.",
+          "evidence": "Color contrast analysis of spending charts and account dashboards found 6 instances below WCAG 2.1 AA 4.5:1 minimum contrast ratio."
+        }
+      ]
+    }
+  ],
+  "recommendations": [
+    {
+      "title": "Expand AI-powered customer interactions beyond basic virtual assistant",
+      "description": "Invest in predictive financial wellness tools, AI-driven product recommendations, and proactive alerts that leverage transaction data to provide personalized value. This would close the gap with JPMorgan's and BofA's AI offerings while building on the existing Fargo platform."
+    },
+    {
+      "title": "Redesign high-frequency mobile workflows to reduce friction",
+      "description": "Prioritize a UX overhaul of bill pay, transfers, and Zelle flows to reduce tap counts and introduce contextual biometric authentication. Target parity with Chase's streamlined mobile experience as the minimum benchmark."
+    },
+    {
+      "title": "Unify web design system and streamline digital account opening",
+      "description": "Consolidate the fragmented web experience under a single design system and re-engineer the account opening funnel to achieve 55%+ completion rates. This addresses both the conversion gap and the inconsistent brand perception."
+    },
+    {
+      "title": "Launch a digital trust and transparency initiative",
+      "description": "Address lingering sentiment issues with a visible digital-first campaign around fee transparency, real-time service status, and proactive communication. Pair with measurable NPS improvement targets tied to specific digital CX improvements."
+    }
+  ],
+  "generatedAt": "2025-01-15T10:30:00Z"
+}

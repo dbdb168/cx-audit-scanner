@@ -19,9 +19,10 @@ export function LoadingState({ onComplete }: LoadingStateProps) {
   const [currentStep, setCurrentStep] = useState(0);
 
   useEffect(() => {
+    // Once we've gone through all steps, signal completion
     if (currentStep >= STEPS.length) {
-      const timeout = setTimeout(onComplete, 600);
-      return () => clearTimeout(timeout);
+      onComplete();
+      return;
     }
 
     const timeout = setTimeout(() => {
@@ -30,6 +31,9 @@ export function LoadingState({ onComplete }: LoadingStateProps) {
 
     return () => clearTimeout(timeout);
   }, [currentStep, onComplete]);
+
+  // After all steps complete, keep the last step spinning to show we're still working
+  const allStepsDone = currentStep >= STEPS.length;
 
   return (
     <div className="flex flex-col items-center justify-center min-h-[60vh] gap-8">
@@ -42,8 +46,9 @@ export function LoadingState({ onComplete }: LoadingStateProps) {
 
       <div className="flex flex-col gap-3 w-full max-w-sm">
         {STEPS.map((step, idx) => {
-          const isComplete = idx < currentStep;
-          const isActive = idx === currentStep;
+          const isLastStep = idx === STEPS.length - 1;
+          const isComplete = idx < currentStep && !(isLastStep && allStepsDone);
+          const isActive = idx === currentStep || (isLastStep && allStepsDone);
 
           return (
             <div
@@ -65,7 +70,9 @@ export function LoadingState({ onComplete }: LoadingStateProps) {
                   <div className="w-2 h-2 rounded-full bg-border" />
                 )}
               </div>
-              <span>{step}</span>
+              <span>
+                {isLastStep && allStepsDone ? "Finalizing report..." : step}
+              </span>
             </div>
           );
         })}

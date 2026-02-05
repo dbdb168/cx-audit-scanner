@@ -16,6 +16,7 @@ export function AuditResults() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [methodologyOpen, setMethodologyOpen] = useState(false);
+  const [animationDone, setAnimationDone] = useState(false);
   const fetchStarted = useRef(false);
 
   const company = companies.find((c) => c.id === companyId);
@@ -41,6 +42,13 @@ export function AuditResults() {
         setLoading(false);
       });
   }, [company]);
+
+  // Transition to results when both API and animation are done
+  useEffect(() => {
+    if (audit && animationDone) {
+      setLoading(false);
+    }
+  }, [audit, animationDone]);
 
   if (!company) {
     return (
@@ -83,7 +91,7 @@ export function AuditResults() {
           <ArrowLeft size={14} />
           Back
         </Link>
-        <LoadingState onComplete={() => { if (audit) setLoading(false); }} />
+        <LoadingState onComplete={() => setAnimationDone(true)} />
       </div>
     );
   }

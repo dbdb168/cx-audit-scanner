@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams, Link } from "react-router-dom";
 import type { Audit } from "../lib/types";
+import { companies } from "../data/companies";
 import { CompanyHeader } from "./CompanyHeader";
 import { ScoreGauge } from "./ScoreGauge";
 import { CategoryBreakdown } from "./CategoryBreakdown";
@@ -9,27 +10,58 @@ import { Recommendations } from "./Recommendations";
 import { LoadingState } from "./LoadingState";
 import { ArrowLeft, ChevronDown, ArrowUpRight, MessageCircle } from "lucide-react";
 
-import wellsFargoData from "../data/wells-fargo.json";
-
-const audits: Record<string, Audit> = {
-  "wells-fargo": wellsFargoData as Audit,
-};
-
-interface AuditResultsProps {
-  showLoading?: boolean;
-}
-
-export function AuditResults({ showLoading = false }: AuditResultsProps) {
+export function AuditResults() {
   const { companyId } = useParams<{ companyId: string }>();
-  const [loading, setLoading] = useState(showLoading);
+  const [audit, setAudit] = useState<Audit | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [methodologyOpen, setMethodologyOpen] = useState(false);
+  const fetchStarted = useRef(false);
 
-  const audit = companyId ? audits[companyId] : undefined;
+  const company = companies.find((c) => c.id === companyId);
 
-  if (!audit) {
+  useEffect(() => {
+    if (!company || fetchStarted.current) return;
+    fetchStarted.current = true;
+
+    fetch("/api/generate-audit", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ company }),
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error(`API error: ${res.status}`);
+        return res.json();
+      })
+      .then((data: Audit) => {
+        setAudit(data);
+      })
+      .catch((err) => {
+        setError(err.message);
+        setLoading(false);
+      });
+  }, [company]);
+
+  if (!company) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center gap-4">
-        <p className="text-muted-foreground">Audit not found</p>
+        <p className="text-muted-foreground">Company not found</p>
+        <Link
+          to="/"
+          className="text-sm text-accent hover:underline flex items-center gap-1"
+        >
+          <ArrowLeft size={14} />
+          Back to home
+        </Link>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center gap-4">
+        <p className="text-muted-foreground">Failed to generate audit</p>
+        <p className="text-sm text-muted">{error}</p>
         <Link
           to="/"
           className="text-sm text-accent hover:underline flex items-center gap-1"
@@ -51,10 +83,12 @@ export function AuditResults({ showLoading = false }: AuditResultsProps) {
           <ArrowLeft size={14} />
           Back
         </Link>
-        <LoadingState onComplete={() => setLoading(false)} />
+        <LoadingState onComplete={() => { if (audit) setLoading(false); }} />
       </div>
     );
   }
+
+  if (!audit) return null;
 
   return (
     <div className="min-h-screen">
@@ -143,10 +177,9 @@ export function AuditResults({ showLoading = false }: AuditResultsProps) {
               </p>
               <p>
                 Scores are derived from a combination of public data sources
-                including app store reviews, website performance metrics (Core
-                Web Vitals), accessibility audits (WCAG 2.1), social media
-                sentiment analysis, industry reports, and competitive
-                benchmarking.
+                including website performance metrics (Core Web Vitals),
+                accessibility audits (WCAG 2.1), homepage content analysis, and
+                AI-powered synthesis using industry benchmarks.
               </p>
               <p>
                 The overall score is a weighted average of category scores. Tier

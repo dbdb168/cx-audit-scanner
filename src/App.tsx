@@ -8,10 +8,7 @@ function App() {
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/audit/:companyId" element={<AuditResults />} />
-        <Route
-          path="/audit/:companyId/loading"
-          element={<AuditResults showLoading />}
-        />
+        <Route path="/audit/:companyId/loading" element={<AuditResults />} />
       </Routes>
     </BrowserRouter>
   );

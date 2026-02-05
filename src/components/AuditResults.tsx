@@ -8,7 +8,7 @@ import { CategoryBreakdown } from "./CategoryBreakdown";
 import { FindingsPanel } from "./FindingsPanel";
 import { Recommendations } from "./Recommendations";
 import { LoadingState } from "./LoadingState";
-import { ArrowLeft, ChevronDown, ArrowUpRight, MessageCircle } from "lucide-react";
+import { ArrowLeft, ChevronDown } from "lucide-react";
 
 export function AuditResults() {
   const { companyId } = useParams<{ companyId: string }>();
@@ -134,31 +134,6 @@ export function AuditResults() {
         {/* Recommendations */}
         <div className="mt-6">
           <Recommendations recommendations={audit.recommendations} />
-        </div>
-
-        {/* CTA */}
-        <div className="mt-8 rounded-lg border border-accent/30 bg-gradient-to-r from-accent/5 to-accent/10 p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <div className="flex flex-col gap-1">
-            <h3 className="font-semibold">Interested in {audit.company.name}?</h3>
-            <p className="text-sm text-muted-foreground">
-              See how they score as a prospect, or get in touch to discuss these findings.
-            </p>
-          </div>
-          <div className="flex items-center gap-3">
-            <a
-              href={`/company/${audit.company.id}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 rounded-lg border border-border bg-card px-4 py-2.5 text-sm font-medium hover:bg-card-hover transition-colors"
-            >
-              View in Account Scorer
-              <ArrowUpRight size={14} />
-            </a>
-            <button className="inline-flex items-center gap-2 rounded-lg bg-accent px-4 py-2.5 text-sm font-medium text-white hover:bg-accent-muted transition-colors cursor-pointer">
-              <MessageCircle size={14} />
-              Reach Out
-            </button>
-          </div>
         </div>
 
         {/* Methodology */}

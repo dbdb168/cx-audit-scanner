@@ -4,12 +4,55 @@ import { createClient } from "@supabase/supabase-js";
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 const supabase = createClient(
   process.env.SUPABASE_URL!,
-  process.env.SUPABASE_ANON_KEY!
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
 const CACHE_DAYS = 7;
 
-// ── Types (mirror frontend types) ──────────────────────────────
+// ── Allowed companies (SSRF prevention) ────────────────────────
+const ALLOWED_COMPANIES: Record<string, { name: string; website: string; sector: "bank" | "insurance" }> = {
+  "wells-fargo": { name: "Wells Fargo", website: "wellsfargo.com", sector: "bank" },
+  "jpmorgan-chase": { name: "JPMorgan Chase", website: "chase.com", sector: "bank" },
+  "bank-of-america": { name: "Bank of America", website: "bankofamerica.com", sector: "bank" },
+  "citigroup": { name: "Citigroup", website: "citi.com", sector: "bank" },
+  "us-bancorp": { name: "U.S. Bancorp", website: "usbank.com", sector: "bank" },
+  "pnc-financial": { name: "PNC Financial", website: "pnc.com", sector: "bank" },
+  "truist-financial": { name: "Truist Financial", website: "truist.com", sector: "bank" },
+  "capital-one": { name: "Capital One", website: "capitalone.com", sector: "bank" },
+  "td-bank": { name: "TD Bank", website: "td.com", sector: "bank" },
+  "goldman-sachs": { name: "Goldman Sachs", website: "goldmansachs.com", sector: "bank" },
+  "state-farm": { name: "State Farm", website: "statefarm.com", sector: "insurance" },
+  "progressive": { name: "Progressive", website: "progressive.com", sector: "insurance" },
+  "allstate": { name: "Allstate", website: "allstate.com", sector: "insurance" },
+  "geico": { name: "GEICO", website: "geico.com", sector: "insurance" },
+  "usaa": { name: "USAA", website: "usaa.com", sector: "insurance" },
+  "liberty-mutual": { name: "Liberty Mutual", website: "libertymutual.com", sector: "insurance" },
+  "nationwide": { name: "Nationwide", website: "nationwide.com", sector: "insurance" },
+  "travelers": { name: "Travelers", website: "travelers.com", sector: "insurance" },
+  "metlife": { name: "MetLife", website: "metlife.com", sector: "insurance" },
+  "prudential": { name: "Prudential", website: "prudential.com", sector: "insurance" },
+};
+
+// ── Rate limiting (in-memory, resets on cold start) ────────────
+const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
+const RATE_LIMIT_MAX = 10;
+const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000; // 1 hour
+
+function checkRateLimit(ip: string): boolean {
+  const now = Date.now();
+  const entry = rateLimitMap.get(ip);
+
+  if (!entry || now > entry.resetAt) {
+    rateLimitMap.set(ip, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS });
+    return true;
+  }
+
+  if (entry.count >= RATE_LIMIT_MAX) return false;
+  entry.count++;
+  return true;
+}
+
+// ── Types ──────────────────────────────────────────────────────
 interface CompanyInfo {
   id: string;
   name: string;
@@ -48,13 +91,12 @@ interface Audit {
 
 // ── Step 1: Fetch website HTML ─────────────────────────────────
 async function fetchWebsite(website: string): Promise<string> {
-  const url = website.startsWith("http") ? website : `https://www.${website}`;
+  const url = `https://www.${website}`;
   const res = await fetch(url, {
     headers: { "User-Agent": "CXAuditScanner/1.0" },
     redirect: "follow",
   });
   const html = await res.text();
-  // Trim to ~15k chars to stay within Claude context limits
   return html.slice(0, 15000);
 }
 
@@ -71,7 +113,7 @@ interface PageSpeedResult {
 async function fetchPageSpeed(
   website: string
 ): Promise<PageSpeedResult | null> {
-  const url = website.startsWith("http") ? website : `https://www.${website}`;
+  const url = `https://www.${website}`;
   try {
     const apiUrl = `https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=${encodeURIComponent(url)}&category=PERFORMANCE&category=ACCESSIBILITY&strategy=MOBILE`;
     const res = await fetch(apiUrl);
@@ -237,7 +279,20 @@ Produce 5 categories with exactly 3 findings each (observation, whyItMatters, ev
     throw new Error("Claude did not return tool_use response");
   }
 
-  return toolUse.input as Omit<Audit, "id" | "company" | "generatedAt">;
+  const result = toolUse.input as Omit<Audit, "id" | "company" | "generatedAt">;
+
+  // Validate response shape
+  if (
+    typeof result.overallScore !== "number" ||
+    !["strong", "adequate", "needs-work"].includes(result.tier) ||
+    !Array.isArray(result.categories) ||
+    result.categories.length !== 5 ||
+    !Array.isArray(result.recommendations)
+  ) {
+    throw new Error("Invalid audit response shape");
+  }
+
+  return result;
 }
 
 // ── Main handler ───────────────────────────────────────────────
@@ -246,17 +301,37 @@ export default async function handler(req: any, res: any) {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  const { company } = req.body as { company: CompanyInfo };
-  if (!company?.id || !company?.website) {
-    return res.status(400).json({ error: "Missing company data" });
+  // Rate limit by IP
+  const ip = (req.headers["x-forwarded-for"] as string)?.split(",")[0]?.trim() || "unknown";
+  if (!checkRateLimit(ip)) {
+    return res.status(429).json({ error: "Rate limit exceeded. Try again later." });
   }
+
+  // Validate input: company ID must be in our allowed list
+  const { company } = req.body as { company: { id?: string } };
+  if (!company?.id || typeof company.id !== "string") {
+    return res.status(400).json({ error: "Missing company ID" });
+  }
+
+  const allowed = ALLOWED_COMPANIES[company.id];
+  if (!allowed) {
+    return res.status(400).json({ error: "Unknown company" });
+  }
+
+  // Use server-side company data, not user-supplied (prevents SSRF)
+  const validatedCompany: CompanyInfo = {
+    id: company.id,
+    name: allowed.name,
+    website: allowed.website,
+    sector: allowed.sector,
+  };
 
   try {
     // Check cache
     const { data: cached } = await supabase
       .from("audits")
       .select("audit_data, created_at")
-      .eq("company_id", company.id)
+      .eq("company_id", validatedCompany.id)
       .single();
 
     if (cached) {
@@ -268,22 +343,22 @@ export default async function handler(req: any, res: any) {
 
     // Run pipeline
     const [html, pageSpeed] = await Promise.all([
-      fetchWebsite(company.website),
-      fetchPageSpeed(company.website),
+      fetchWebsite(validatedCompany.website),
+      fetchPageSpeed(validatedCompany.website),
     ]);
 
-    const auditResult = await synthesizeAudit(company, html, pageSpeed);
+    const auditResult = await synthesizeAudit(validatedCompany, html, pageSpeed);
 
     const audit: Audit = {
-      id: company.id,
-      company,
+      id: validatedCompany.id,
+      company: validatedCompany,
       ...auditResult,
       generatedAt: new Date().toISOString(),
     };
 
     // Cache (upsert)
     await supabase.from("audits").upsert({
-      company_id: company.id,
+      company_id: validatedCompany.id,
       audit_data: audit,
       created_at: new Date().toISOString(),
     });
@@ -291,8 +366,6 @@ export default async function handler(req: any, res: any) {
     return res.status(200).json(audit);
   } catch (error: any) {
     console.error("Audit generation failed:", error);
-    return res
-      .status(500)
-      .json({ error: "Audit generation failed", message: error.message });
+    return res.status(500).json({ error: "Audit generation failed" });
   }
 }
